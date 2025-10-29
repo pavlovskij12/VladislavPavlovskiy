@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>КП2-4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100 p-4" x-data="chatApp()">
+  <div class="w-full transition-all duration-300" :class="accessToken ? 'max-w-4xl' : 'max-w-md'">
+    <h1 class="text-2xl font-bold mb-4">Matrix Login</h1>
+
+    <div x-show="!accessToken" class="bg-white rounded-xl shadow p-4 space-y-3">
+      <label class="block text-sm">Логін</label>
+      <input x-model.trim="username" class="border rounded p-2 w-full" placeholder="@login:matrix.org або login" />
+
+      <label class="block text-sm">Пароль</label>
+      <input x-model="password" type="password" class="border rounded p-2 w-full" placeholder="Пароль" />
+
+      <button @click="login()" class="w-full rounded bg-blue-600 hover:bg-blue-700 text-white py-2">Увійти</button>
+      <p class="text-red-600 text-sm min-h-[1.25rem]" x-text="error"></p>
+    </div>
+
+    <template x-if="accessToken">
+      <h1 class="text-xl font-semibold mt-4 mb-2">Ви успішно авторизувались. Ваша панель керування</h1>
+    </template>
+
+    <div class="flex flex-col h-[550px]" x-show="accessToken">
+      <!-- User ID -->
+      <div class="mb-2 p-2 bg-gray-200 rounded text-sm break-words">
+        <span class="font-bold">Your Matrix ID:</span>
+        <span x-text="userId ? userId : 'Loading...'"></span>
+      </div>
+
+      <div class="p-2 border rounded text-sm bg-white">
+        <h2 class="text-base font-semibold mb-1">Резюме</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs">Ім’я</label>
+            <input x-model.trim="resume.name" class="border rounded p-2 w-full" />
+          </div>
+          <div>
+            <label class="block text-xs">Email</label>
+            <input x-model.trim="resume.email" class="border rounded p-2 w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs">Навички</label>
+            <input x-model.trim="resume.skills" class="border rounded p-2 w-full" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs">Про себе</label>
+            <textarea x-model.trim="resume.about" rows="3" class="border rounded p-2 w-full"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function chatApp() {
+      return {
+        username: '',
+        password: '',
+        accessToken: '',
+        userId: '',
+        error: '',
+        resume: { name: '', email: '', skills: '', about: '' },
+        async login() {
+          this.error = '';
+          if (!this.username || !this.password) {
+            this.error = 'Введіть логін і пароль.';
+            return;
+          }
+          try {
+            const res = await fetch('https://matrix.org/_matrix/client/r0/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'm.login.password', user: this.username, password: this.password })
+            });
+            const data = await res.json();
+            if (data && data.access_token) {
+              this.accessToken = data.access_token;
+              this.userId = data.user_id || '';
+            } else {
+              this.error = 'Невірний логін або пароль.';
+            }
+          } catch (e) {
+            this.error = 'Помилка під час авторизації.';
+            console.error(e);
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>
