@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Matrix Chat</title>
+
+  <!-- Tailwind + Alpine -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
+
+  <!-- Компонентні стилі -->
+  <link rel="stylesheet" href="./login/login.css" />
+  <link rel="stylesheet" href="./sidebar/sidebar.css" />
+
+  <!-- Базові стилі макета (мінімум) -->
+  <style>
+    .chat-container { min-height: 80vh; }
+    .chat-area { flex-grow: 1; }
+  </style>
+
+  <!-- Логіка компонентів -->
+  <script src="./login/login.js"></script>
+  <script src="./sidebar/sidebar.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center p-4">
+  <div x-data="chatApp()" class="chat-container bg-white rounded-lg shadow-lg flex w-full max-w-5xl">
+
+    <!-- Сайдбар (список кімнат) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Основна область (логін/чат) -->
+    <div class="chat-area p-4 flex flex-col w-full">
+      <!-- Логін -->
+      <div id="login-container"></div>
+
+      <!-- (опційно) Заглушка чату після логіну -->
+      <template x-if="accessToken && roomId">
+        <div class="mt-4">
+          <h2 class="text-lg font-semibold mb-2" x-text="'Room: ' + (rooms.find(r=>r.roomId===roomId)?.name || roomId)"></h2>
+          <div class="border rounded p-3 h-64 overflow-y-auto mb-3 bg-gray-50">
+            <template x-for="(m, idx) in messages" :key="idx">
+              <div class="text-sm mb-1" x-text="m"></div>
+            </template>
+            <template x-if="messages.length===0">
+              <div class="text-sm text-gray-500">No messages yet…</div>
+            </template>
+          </div>
+          <div class="flex gap-2">
+            <input x-model="newMessage" @keydown.enter="sendDummyMessage()" class="border p-2 flex-1 rounded" placeholder="(demo) Type message and press Enter">
+            <button @click="sendDummyMessage()" class="bg-blue-500 text-white px-4 rounded hover:bg-blue-600 transition">Send</button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Завантаження HTML-шаблонів -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // login.html -> #login-container
+      fetch('./login/login.html')
+        .then(r => r.text())
+        .then(html => { document.getElementById('login-container').innerHTML = html; })
+        .catch(err => console.error('Error loading login:', err));
+
+      // sidebar.html -> #sidebar-container
+      fetch('./sidebar/sidebar.html')
+        .then(r => r.text())
+        .then(html => { document.getElementById('sidebar-container').innerHTML = html; })
+        .catch(err => console.error('Error loading sidebar:', err));
+    });
+
+    // Глобальний стан Alpine
+    function chatApp() {
+      return {
+        // --- стани
+        username: '',
+        password: '',
+        accessToken: '',
+        userId: '',
+        roomId: '',
+        joinRoomId: '',
+        newRoomName: '',
+        newRoomId: '',
+        rooms: [],
+        messages: [],
+        newMessage: '',
+        inviteUser: '',
+        error: '',
+        lastSyncToken: '',
+
+        // --- методи з компонентів
+        login,                 // ./login/login.js
+        createRoom,            // ./sidebar/sidebar.js
+        fetchRoomsWithNames,   // ./sidebar/sidebar.js
+
+        // --- допоміжне (мінімум для демо)
+        getRoomName(roomId) {
+          // просте fallback-ім'я з останніх 6 символів
+          return roomId ? `room-${roomId.slice(-6)}` : '';
+        },
+        switchRoom(id) {
+          this.roomId = id;
+          this.messages = []; // очистити демо-повідомлення
+          this.fetchMessages(); // перше завантаження (демо)
+        },
+        async fetchMessages() {
+          // Спрощена заглушка: в реальному клієнті тут — sync/events
+          // Щоб інтерфейс не був “порожнім” після логіну.
+          if (!this.roomId) return;
+          // Нічого не робимо — це лише “каркас”.
+        },
+        sendDummyMessage() {
+          if (!this.newMessage.trim()) return;
+          this.messages.push(`[you]: ${this.newMessage.trim()}`);
+          this.newMessage = '';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
