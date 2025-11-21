@@ -1,0 +1,12 @@
+/* Локальні стилі лише для блоку логіну */
+.login-card {
+  max-width: 420px;
+  width: 100%;
+}
+#login-container {
+  width: 400px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}

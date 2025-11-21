@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Matrix Chat</title>
+
+  <!-- Tailwind + Alpine -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
+
+  <!-- Логіка компонентів -->
+  <script src="./login.js"></script>
+  <script src="./sidebar.js"></script>
+  <script src="./user.js"></script>
+  <script src="./chat.js"></script>
+
+  <!-- Стилі -->
+  <link rel="stylesheet" href="./index.css">
+  <link rel="stylesheet" href="./login.css">
+  <link rel="stylesheet" href="./sidebar.css">
+</head>
+
+<body class="bg-gray-100">
+  <!-- ГОЛОВНИЙ КОНТЕЙНЕР APP -->
+  <div
+    x-data="chatApp()"
+    :class="accessToken
+      ? 'flex w-full'                                           /* після логіну: стандартна розкладка із сайдбарами */
+      : 'min-h-screen w-full flex items-center justify-center'  /* до логіну: центруємо форму */
+    "
+  >
+    <!-- Сайдбар кімнат -->
+    <div id="sidebar-container"></div>
+
+    <!-- Сайдбар користувачів -->
+    <div id="user-container"></div>
+
+    <!-- Основна зона -->
+    <div class="chat-area p-4 flex flex-col w-full max-w-5xl">
+      <div id="login-container"></div>
+      <div id="chat-container" class="flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Підвантаження HTML-шаблонів через preload -->
+  <script>
+    const missing = (name) => function () {
+      console.warn(`[WARN] Function "${name}" is missing. Check that ${name}.js is loaded.`);
+    };
+
+    function chatApp() {
+      return {
+        // auth
+        username: '',
+        password: '',
+        accessToken: '',
+        userId: '',
+
+        // rooms & messages
+        roomId: '',
+        joinRoomId: '',
+        newRoomName: '',
+        newRoomId: '',
+        rooms: [],
+        messages: [],
+        newMessage: '',
+        inviteUser: '',
+        error: '',
+        lastSyncToken: '',
+        roomMembers: [],
+
+        // методи з підключених файлів
+        login:               typeof window.login               === 'function' ? window.login               : missing('login'),
+        createRoom:          typeof window.createRoom          === 'function' ? window.createRoom          : missing('createRoom'),
+        fetchRoomsWithNames: typeof window.fetchRoomsWithNames === 'function' ? window.fetchRoomsWithNames : missing('fetchRoomsWithNames'),
+        joinRoom:            typeof window.joinRoom            === 'function' ? window.joinRoom            : missing('joinRoom'),
+        inviteUserToRoom:    typeof window.inviteUserToRoom    === 'function' ? window.inviteUserToRoom    : missing('inviteUserToRoom'),
+        getRoomName:         typeof window.getRoomName         === 'function' ? window.getRoomName         : missing('getRoomName'),
+        switchRoom:          typeof window.switchRoom          === 'function' ? window.switchRoom          : missing('switchRoom'),
+        sendMessage:         typeof window.sendMessage         === 'function' ? window.sendMessage         : missing('sendMessage'),
+        fetchMessages:       typeof window.fetchMessages       === 'function' ? window.fetchMessages       : missing('fetchMessages'),
+        fetchRoomMembers:    typeof window.fetchRoomMembers    === 'function' ? window.fetchRoomMembers    : missing('fetchRoomMembers'),
+        leaveRoom:           typeof window.leaveRoom           === 'function' ? window.leaveRoom           : missing('leaveRoom'),
+        kickUser:            typeof window.kickUser            === 'function' ? window.kickUser            : missing('kickUser'),
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.templates) {
+        console.error('preload bridge "templates" is not available.');
+        return;
+      }
+
+      const PREFIX = '';
+
+      document.getElementById('login-container').innerHTML   = window.templates.load(PREFIX + 'login.html');
+      document.getElementById('sidebar-container').innerHTML = window.templates.load(PREFIX + 'sidebar.html');
+      document.getElementById('user-container').innerHTML    = window.templates.load(PREFIX + 'user.html');
+      document.getElementById('chat-container').innerHTML    = window.templates.load(PREFIX + 'chat.html');
+    });
+  </script>
+</body>
+</html>
